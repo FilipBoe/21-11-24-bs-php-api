@@ -11,8 +11,8 @@ $posts ??= [];
 <div class="mt-10">
     <a href="/post/new" class="p-4 text-white bg-blue-500 rounded-lg hover:cursor-pointer">New Post</a>
 
-    <div class="mt-5">
-        <div class="grid grid-cols-3 gap-4">
+    <div class="mt-8">
+        <div class="grid grid-cols-1 gap-2 md:grid-cols-3">
             <?php foreach ($posts as $post) : ?>
                 <a href="<?php echo $post->link(); ?>" class="p-4 bg-gray-800 rounded-lg hover:cursor-pointer">
                     <h2 class="mb-2 text-3xl">

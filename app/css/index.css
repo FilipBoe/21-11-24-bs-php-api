@@ -11,3 +11,11 @@
 body {
     @apply bg-slate-900;
 }
+
+.nav-link {
+    @apply px-3 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-gray-700 hover:text-white;
+}
+
+.nav-link--active {
+    @apply text-white bg-gray-900 rounded-md hover:bg-gray-900;
+}

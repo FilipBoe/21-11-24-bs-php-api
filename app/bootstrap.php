@@ -2,13 +2,13 @@
 
 use App\Router;
 use App\Utils\Database\Connection;
-use App\Utils\Database\Pet;
 use App\Utils\Database\User;
 use App\Utils\ServiceContainer;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
 session_start();
+date_default_timezone_set('Europe/Vienna');
 
 $servername = "localhost:4000";
 $username = "root";
@@ -50,6 +50,13 @@ $middlewares = [
                 ->find($_SESSION['userId'])
                 ->unset('password')
         ];
+    },
+    'tic-tac-toe--opening-times' => function () {
+        if (!ticTacToeOpen()) {
+            redirect('/settings');
+        }
+
+        return [];
     }
 ];
 

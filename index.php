@@ -3,6 +3,7 @@
 use App\Router;
 use App\Utils\Database\Comment;
 use App\Utils\Database\Post;
+use App\Utils\Database\Setting;
 use App\Utils\Database\User;
 
 require_once __DIR__ . '/app/bootstrap.php';
@@ -13,10 +14,23 @@ require_once __DIR__ . '/app/bootstrap.php';
 $router = app(Router::class);
 
 $router->get('/', function () {
-    Router::view('index', [
+    Router::view('pages/index', [
         'posts' => (new Post)->all()
     ]);
 }, middleware: ['auth']);
+
+$router->get('/settings', function (array $request) {
+    $settings = (new Setting)->all();
+
+    Router::view('pages/settings', [
+        'user' => $request['user'],
+        'settings' => $settings
+    ]);
+}, middleware: ['auth']);
+
+$router->get('/tic-tac-toe', function () {
+    Router::view('pages/tic-tac-toe', []);
+}, middleware: ['auth', 'tic-tac-toe--opening-times']);
 
 $router->get('/login', function () {
     Router::view('login');
@@ -124,6 +138,38 @@ $router->post('/api/posts/{id}/comments', function (array $request, int $id) {
     $newId = (new Comment)->create($data);
 
     Router::jsonResponse(['id' => $newId]);
+}, middleware: ['api-auth']);
+
+$router->post('/api/settings', function (array $request) {
+    $data = $request['data'];
+
+    $tttFrom = $data['ttt_from'];
+    $tttTo = $data['ttt_to'];
+
+
+    $ids = (new Setting)->updateOrNew(
+        [
+            [
+                'user_id' => $request['user']->get('id'),
+                'key' => 'tic-tac-toe-from',
+                'value' => $tttFrom
+            ],
+            [
+                'user_id' => $request['user']->get('id'),
+                'key' => 'tic-tac-toe-to',
+                'value' => $tttTo
+            ]
+        ],
+        [
+            'user_id',
+            'key'
+        ]
+    );
+
+    Router::jsonResponse([
+        'data' => $data,
+        'ids' => $ids
+    ]);
 }, middleware: ['api-auth']);
 
 $router->match($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);

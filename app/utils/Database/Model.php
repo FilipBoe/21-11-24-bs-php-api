@@ -58,7 +58,7 @@ abstract class Model
     {
         $conn = app(Connection::class)->getConnection();
 
-        $columns = implode(', ', array_keys($data));
+        $columns = implode(', ', array_map(fn($key) => "`$key`", array_keys($data)));
         $values = implode(', ', array_map(fn($key) => ":$key", array_keys($data)));
 
         $stmt = $conn->prepare("INSERT INTO {$this->table} ($columns) VALUES ($values)");
@@ -66,6 +66,40 @@ abstract class Model
         $stmt->execute($data);
 
         return (int) $conn->lastInsertId();
+    }
+
+    public function updateOrNew(array $rows, array $unique = ['id']): array
+    {
+        $ids = [];
+        $conn = app(Connection::class)->getConnection();
+
+        foreach ($rows as $row) {
+            $rowExistsQuery = $conn->prepare("SELECT id FROM {$this->table} WHERE " . implode(' AND ', array_map(fn($key) => "`$key` = :$key", $unique)));
+
+            $bindParams = [];
+
+            foreach ($unique as $key) {
+                $bindParams[':' . $key] = $row[$key];
+            }
+
+            $rowExistsQuery->execute($bindParams);
+
+            $rowExists = $rowExistsQuery->fetch(PDO::FETCH_ASSOC);
+
+            if ($rowExists) {
+                $id = (new static())->parse($rowExists)->get('id');
+
+                $updateStmt = $conn->prepare("UPDATE {$this->table} SET " . implode(', ', array_map(fn($key) => "`$key` = :$key", array_keys($row))) . " WHERE id = :id");
+                $updateStmt->execute(array_merge($row, ['id' => $id]));
+
+                $ids[] = $id;
+                continue;
+            }
+
+            $ids[] = $this->create($row);
+        }
+
+        return $ids;
     }
 
     public function delete(int $id): bool
